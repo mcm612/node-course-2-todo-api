@@ -31,7 +31,7 @@ app.get('/todos',(req, res)=>{
   })
 });
 
-// GET /todos/123345
+// GET /todos/:id
 //we are creating a url parameter
 //this will create an id variable and will be on the request object
 app.get('/todos/:id',(req, res) => {
