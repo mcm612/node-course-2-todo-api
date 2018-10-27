@@ -1,17 +1,21 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 
 const todos = [{
+  _id: new ObjectID(),
   text: 'First test todo'
 }, {
+  _id: new ObjectID(),
   text: 'Second test todo'
 }];
 
 beforeEach((done) => {
   Todo.remove({}).then(() => {
+    //mongoose method = insertmany
     return Todo.insertMany(todos);
   }).then(() => done());
 });
@@ -22,6 +26,8 @@ describe('POST /todos', () => {
 
     request(app)
       .post('/todos')
+      //we need to pass an object, which will be converted 
+      //into JSON by Supertest!
       .send({text})
       .expect(200)
       .expect((res) => {
@@ -60,6 +66,7 @@ describe('POST /todos', () => {
 
 describe('GET /todos', () => {
   it('should get all todos', (done) => {
+    //start the supertest request
     request(app)
       .get('/todos')
       .expect(200)
@@ -68,4 +75,36 @@ describe('GET /todos', () => {
       })
       .end(done);
   });
+});
+
+
+describe('GET /todos/:id', () => {
+  it('should return todo doc', (done) => {
+    request(app)
+      //to convert an id to a string
+      .get(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect((res)=>{
+        expect(res.body.todo.text).toBe(todos[0].text);
+      })
+      .end(done);
+  });
+
+
+  it('should return 404 if todo not found', (done) => {
+    var hexId = new ObjectID().toHexString();
+
+    request(app)
+      .get(`/todos/${hexId}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it('should return 404 for non-object found', (done) => {
+    request(app)
+      .get('/todos/123abc')
+      .expect(404)
+      .end(done);
+  });
+
 });
