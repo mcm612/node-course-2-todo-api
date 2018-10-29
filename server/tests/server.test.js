@@ -83,11 +83,16 @@ describe('GET /todos/:id', () => {
     request(app)
       //to convert an id to a string
       .get(`/todos/${todos[0]._id.toHexString()}`)
-      .expect(200)
-      .expect((res)=>{
+      .expect(300)
+      // .expect((res)=>{
+      //   expect(res.body.todo.text).toBe(todos[0].text);
+      // })
+      // .end(done);
+      .end((err, res) => {
+        expect(res.status).toBe(200);
         expect(res.body.todo.text).toBe(todos[0].text);
-      })
-      .end(done);
+        done();
+      });
   });
 
 
