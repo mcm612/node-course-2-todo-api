@@ -65,7 +65,7 @@ app.delete('/todos/:id',(req, res) => {
       return res.status(404).send('We did not find a matching ID');
     }
     // if doc, send doc back with 200
-    res.status(200).send(todo);   
+    res.status(200).send({todo});   
   //error
     //400 with empty body
   }).catch((e) => { 
