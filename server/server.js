@@ -1,3 +1,5 @@
+require('./config/config/js');
+
 const _          = require('lodash');
 const express    = require('express');
 const bodyParser = require('body-parser');
@@ -9,7 +11,7 @@ var {User}       = require('./models/user');
 
 
 var app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 //bodyParser will take the JSON and convert it into an object 
 app.use(bodyParser.json());
@@ -78,6 +80,7 @@ app.delete('/todos/:id',(req, res) => {
 app.patch('/todos/:id', (req, res) => {
   var id = req.params.id;
   //Creates an object composed of the picked object properties
+  //the only properties the user will be able to update 
   var body = _.pick(req.body, ['text', 'completed']);
   
   if (!ObjectID.isValid(id)) {
