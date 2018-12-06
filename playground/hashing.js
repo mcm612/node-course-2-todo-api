@@ -1,36 +1,50 @@
 const {SHA256} = require('crypto-js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-var data = {
-  id: 10
-};
-var token = jwt.sign(data, '123abc');
-console.log(token);
-var decoded = jwt.verify(token, '123abc');
-console.log(decoded);
-// var message = 'I am user number 3';
-// //the value is an object so use toString() to convert
-// //into string?
-// var hash = SHA256(message).toString();
+var password = '123abc!';
 
-// console.log(`Message: ${message}`);
-// console.log(`Hash: ${hash}`);
+// bcrypt.genSalt(10, (err,salt) => {
+//   bcrypt.hash(password, salt, (err, hash) => {
+//     console.log(hash);
+//   });
+// });
 
+var hashedPassword = '$2a$10$IZncmNvxrQtNH87vKJ0Fae6tQpqnZbuHEb/6Hn44.ZlMjuLc9aO4.';
+
+bcrypt.compare(password, hashedPassword, (err, res) => {
+  console.log(res);
+});
 // var data = {
-//   id: 4
+//   id: 10
 // };
+// var token = jwt.sign(data, '123abc');
+// console.log(token);
+// var decoded = jwt.verify(token, '123abc');
+// console.log(decoded);
+// // var message = 'I am user number 3';
+// // //the value is an object so use toString() to convert
+// // //into string?
+// // var hash = SHA256(message).toString();
 
-// var token = {
-//   data: data,
-//   hash: SHA256(JSON.stringify(data) + 'somesecret').toString()
-// }
+// // console.log(`Message: ${message}`);
+// // console.log(`Hash: ${hash}`);
 
-// token.data.id = 5;
-// token.hash = SHA256(JSON.stringify(token.data)).toString()
+// // var data = {
+// //   id: 4
+// // };
 
-// var resultHash = SHA256(JSON.stringify(token.data) + 'somesecret').toString();
-// if (resultHash === token.hash) {
-//   console.log('Data was not changed');
-// } else {
-//   console.log('Data was changed. Do not trust!');
-// }
+// // var token = {
+// //   data: data,
+// //   hash: SHA256(JSON.stringify(data) + 'somesecret').toString()
+// // }
+
+// // token.data.id = 5;
+// // token.hash = SHA256(JSON.stringify(token.data)).toString()
+
+// // var resultHash = SHA256(JSON.stringify(token.data) + 'somesecret').toString();
+// // if (resultHash === token.hash) {
+// //   console.log('Data was not changed');
+// // } else {
+// //   console.log('Data was changed. Do not trust!');
+// // }
