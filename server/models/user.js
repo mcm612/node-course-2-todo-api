@@ -52,6 +52,20 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+UserSchema.methods.removeToken = function (token) {
+//Objective - remove any object from the array that has a token equal to the value
+//that is passed
+//Mongo DB operator - $pull
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {token}
+    }
+  });
+};
+
+
 UserSchema.statics.findByToken = function (token) {
   var User = this;
   var decoded;
