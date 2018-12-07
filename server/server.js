@@ -1,101 +1,91 @@
-require('./config/config.js');
+require('./config/config');
 
-const _          = require('lodash');
-const express    = require('express');
+const _ = require('lodash');
+const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 
-var {mongoose}   = require('./db/mongoose');
-var {Todo}       = require('./models/todo');
-var {User}       = require('./models/user');
-var {authenticate} = require('./middleware/authenticate'); 
-
+var {mongoose} = require('./db/mongoose');
+var {Todo} = require('./models/todo');
+var {User} = require('./models/user');
+var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
 const port = process.env.PORT;
 
-//bodyParser will take the JSON and convert it into an object 
 app.use(bodyParser.json());
 
-app.post('/todos',(req, res) => {
-    var todo = new Todo({
-        text: req.body.text
-    });
+app.post('/todos', (req, res) => {
+  var todo = new Todo({
+    text: req.body.text
+  });
 
-    todo.save().then((doc)=>{
-      res.send(doc);
-    }, (e) => {
-      res.status(400).send(e);
-    });
-});
-
-app.get('/todos',(req, res)=>{
-  Todo.find().then((todos)=>{
-    res.send({todos: todos});
+  todo.save().then((doc) => {
+    res.send(doc);
   }, (e) => {
     res.status(400).send(e);
-  })
+  });
 });
 
-// GET /todos/:id
-//we are creating a url parameter
-//this will create an id variable and will be on the request object
-app.get('/todos/:id',(req, res) => {
-  var id = req.params.id;
-
-  if (!ObjectID.isValid(id)){
-    return res.status(404).send('Please provide valid object ID');
-  }
-
-  Todo.findById(id).then((todo)=>{
-    if (!todo) {
-      return res.status(404).send('We did not find a matching ID');
-    }
-    res.send({todo:todo});
-  }).catch((e) => res.status.send(400));
+app.get('/todos', (req, res) => {
+  Todo.find().then((todos) => {
+    res.send({todos});
+  }, (e) => {
+    res.status(400).send(e);
+  });
 });
 
-app.delete('/todos/:id',(req, res) => {
-  //get id
+app.get('/todos/:id', (req, res) => {
   var id = req.params.id;
-  //validate the id -> not valid? return 404
-  if (!ObjectID.isValid(id)){
-    return res.status(404).send('Please provide valid object ID');
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
   }
-  //remove todo by id 
-  Todo.findByIdAndRemove(id).then((todo)=> {
-  //success 
-    // if no doc, send 404
+
+  Todo.findById(id).then((todo) => {
     if (!todo) {
-      return res.status(404).send('We did not find a matching ID');
+      return res.status(404).send();
     }
-    // if doc, send doc back with 200
-    res.status(200).send({todo});   
-  //error
-    //400 with empty body
-  }).catch((e) => { 
-    res.status.send(400).send('empty body');
+
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
+
+app.delete('/todos/:id', (req, res) => {
+  var id = req.params.id;
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Todo.findByIdAndRemove(id).then((todo) => {
+    if (!todo) {
+      return res.status(404).send();
+    }
+
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
   });
 });
 
 app.patch('/todos/:id', (req, res) => {
   var id = req.params.id;
-  //Creates an object composed of the picked object properties
-  //the only properties the user will be able to update 
   var body = _.pick(req.body, ['text', 'completed']);
-  
+
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
-  //if body.completed is a boolean and it is true 
+
   if (_.isBoolean(body.completed) && body.completed) {
-    // milliseconds since Jan 1, 1970, 00:00:00.000 GMT
     body.completedAt = new Date().getTime();
   } else {
     body.completed = false;
     body.completedAt = null;
   }
-  //option: new - if true, retun the modified document
+
   Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
     if (!todo) {
       return res.status(404).send();
@@ -115,29 +105,27 @@ app.post('/users', (req, res) => {
   user.save().then(() => {
     return user.generateAuthToken();
   }).then((token) => {
-    //x-auth - you are creating a custom header
     res.header('x-auth', token).send(user);
   }).catch((e) => {
     res.status(400).send(e);
   })
 });
 
-var authenticate = (req, res, next) => {
-  var token = req.header('x-auth');
-
-  User.findByToken(token).then((user) => {
-    if (!user) {
-      return Promise.reject();
-    }  
-    res.send(user);
-  }).catch((e) => {
-    //401 status - authentication is required
-    res.status(401).send();
-  });
-};
-
-app.get('/users/me', authenticate, (req,res) => {
+app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
+});
+
+// POST /users/login {email, password}
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email, body.password).then((user) => {
+    return user.generateAuthToken().then((token) => {
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    res.status(400).send();
+  });
 });
 
 app.listen(port, () => {
